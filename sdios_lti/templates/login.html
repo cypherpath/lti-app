@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Log In{% endblock title %}
+
+
+{% block body %}
+
+<form method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+
+  <fieldset class="large-3 large-centered columns">
+    <legend>Log In to SDI OS LTI</legend>
+
+    <label>
+      <input id="username" name="username" type="text" placeholder="Username">
+    </label>
+
+    <div class="row">
+      <div class="large-12 columns">
+        <div class="row collapse">
+          <div class="small-10 columns">
+            <input id="password" name="password" type="password" placeholder="Password">
+          </div>
+          <div class="small-2 columns">
+            <input type="submit" class="button postfix" value="Log In" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  {% if error %}
+  <small class="error">Your username and password didn't match. Please try again.</small>
+  {% endif %}
+
+  <input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+
+{% endblock %}

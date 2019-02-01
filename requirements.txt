@@ -1,0 +1,5 @@
+Django>=1.7,<1.8
+psycopg2>=2.5.1,<2.6
+pytz>=2014,<2015
+pycrypto>=2.6,<2.7
+requests>=2.5,<2.6

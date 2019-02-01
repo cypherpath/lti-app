@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Consumers{% endblock title %}
+
+{% block body %}
+    <div class="row">
+        <div class="small-12 large-6 columns">
+            <table role="grid">
+                <thead>
+                    <tr>
+                        <th>Consumer Name</th>
+                        <th>Consumer Key</th>
+                        <th>Shared Secret</th>
+                        <th width="200"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consumer in consumers  %}
+                    <tr>
+                        <td> {{ consumer.name }}</td>
+                        <td>{{ consumer.key }}</td>
+                        <td>{{ consumer.secret }}</td>
+                        <td>
+                            <ul class="stack button-group">
+                                <a href="#" class="button alert expand js-delete-consumer" data-consumer-pk="{{ consumer.id }}">Delete Consumer</a>
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+        <div class="small-12 large-6 columns">
+            <form action="{% url 'add_consumer' %}" method="POST" > {% csrf_token %}
+                {% if form.non_field_errors %}
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% for field in form  %}
+                <div class="row">
+                    <div class="small-11 columns">
+                        <div class="row">
+                            <div class="small-3 columns">
+                                <label class="right inline {% if field.errors %}error{% endif %}">{{ field.label}}</label>
+                            </div>
+                            <div class="small-9 columns">
+                                {{ field }}
+                                  {% if field.errors %}<small class="error">{{ field.errors|striptags }}</small>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="row">
+                    <div class="small-11 columns">
+                        <div class="row">
+                            <div class="small-3 columns">
+                            </div>
+                            <div class="small-9 columns">
+                                <input type="submit" class=" button expand" value="Create Consumer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+{% endblock body %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+    // Django provided url for consumer deletion
+    var delete_consumer_url = "{% url 'delete_consumer' %}";
+
+    $(function () {
+
+        /**
+        * Sends a request  to delete selected consumer via Ajax
+        * then fades out the row and removes it from consumers
+        * table.
+        */
+        $(".js-delete-consumer").on("click", function () {
+            var $consumer = $(this).parent().parent().parent();
+
+            $.ajax({
+                type: "POST",
+                url: delete_consumer_url,
+                data: {consumer_id:$(this).data("consumer-pk")},
+                success: function () {
+                    $consumer.fadeOut("slow", function () {
+                        $(this).remove();
+                        position_footer();
+                    });
+                }
+            });
+
+        });
+
+    });
+</script>
+{% endblock javascript %}

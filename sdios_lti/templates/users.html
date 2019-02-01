@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock title %}
+
+{% block body %}
+
+<div class="row">
+    <div class="small-8  small-centered columns">
+        {% for consumer in consumers  %}
+        <dl class="accordion" data-accordion>
+            <dd class="accordion-navigation">
+                <a href="#panel_{{ consumer.id }}">Consumer: {{ consumer.name }}</a>
+                <div id="panel_{{ consumer.id }}" class="content">
+                    <table role="grid">
+                        <thead>
+                            <tr>
+                                <th>LTI User ID</th>
+                                <th>SDI OS Username</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users  %}
+                            {% ifequal user.consumer consumer %}
+                            <tr>
+                                <td width="300"> {{ user.lti_user_id }}</td>
+                                <td width="300">{{ user.sdios_username }}</td>
+                            </tr>
+                            {% endifequal %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </dd>
+        </dl>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock body %}

@@ -1,0 +1,129 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/foundation.css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/foundation-icons.css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/lti.css" />
+    <title>{% block title %}{% endblock title %}  | SDI OS LTI</title>
+  </head>
+  <body>
+
+    {% if user.is_authenticated %}
+      <nav class="top-bar" data-topbar role="navigation">
+        <ul class="title-area">
+          <li class="name">
+            {# <h1><a href="#"></a></h1> #}
+          </li>
+          <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+        </ul>
+
+        <section class="top-bar-section">
+          <ul class="right">
+            <li class="has-dropdown">
+              <a href="#">Navigate To</a>
+              <ul class="dropdown">
+                <li><a href="{% url "index" %}">Home</a></li>
+                <li {% if "sdis" in request.get_full_path %} class="active"{% endif %}><a href="{% url "sdis" %}">SDIs</a></li>
+                <li {% if "consumers" in request.get_full_path %} class="active"{% endif %} ><a href="{% url "consumers" %}">Consumers</a></li>
+                <li {% if "users" in request.get_full_path %} class="active"{% endif %} ><a href="{% url "users" %}">Users</a></li>
+                <li {% if "settings" in request.get_full_path %} class="active"{% endif %} ><a href="{% url "settings" %}">Settings</a></li>
+              </ul>
+            </li>
+            <li><a href="{% url 'logout' %}">Log Out</a></li>
+          </ul>
+
+          <ul class="left">
+            <li><a href="{% url "index" %}">Logged in as:
+              {% if request.user.first_name and request.user.last_name %}
+              {{ request.user.first_name }} {{ request.user.last_name }}
+              {% else %}
+              {{ request.user }}
+              {% endif %}</a></li>
+          </ul>
+        </section>
+      </nav>
+      {% endif %}
+
+      <div class="row fluid-row">
+        <div class="large-12 columns">
+            {% block body %}
+            {% endblock body %}
+        </div>
+      </div>
+
+      <div class="js-footer footer">
+          <span>&#169; 2019, Cypherpath Inc.</span>
+      </div>
+
+    <script src="{{ STATIC_URL }}js/vendor/modernizr.js"></script>
+    <script src="{{ STATIC_URL }}js/vendor/jquery.js"></script>
+    <script src="{{ STATIC_URL }}js/foundation.min.js"></script>
+    <script>
+        $(document).foundation();
+
+        /**
+        * Always maintain a sticky footer  position to
+        * the bottom of the page.
+        */
+        function position_footer() {
+            var footer = $(".js-footer");
+            var pos = footer.position();
+            var height = $(window).height();
+            height = height - pos.top;
+            height = height - footer.height();
+
+            if (height > 0) {
+                footer.css({
+                    'margin-top': height + 'px'
+                });
+            }
+        }
+
+        $(function () {
+
+            $( window ).resize(position_footer);
+            position_footer();
+
+            /**
+            * @CSRF addition to all Ajax Requests
+            *
+            * Add CSRF token to POST or PUT ajax requests.
+            */
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(";");
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) == (name + "=")) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            var csrftoken = getCookie("csrftoken");
+            function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+
+        });
+
+    </script>
+    {% block javascript %}
+    {% endblock javascript %}
+  </body>
+</html>

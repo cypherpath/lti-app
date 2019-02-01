@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock title %}
+
+{% block body %}
+<div class="row">
+    <div class="large-12 columns">
+        <div class="panel">
+            <h3>SDI OS LTI</h3>
+            <div class="row">
+
+                <div class="large-3 medium-3 small-6 columns">
+                    <i class="fi-monitor home-icons"></i>
+                    <p><a href="{% url 'sdis' %}">SDIs</a>
+                    <br />Manage LTI access with SDI OS SDIs</p>
+                </div>
+
+                <div class="large-3 medium-3 small-6 columns">
+                    <i class="fi-projection-screen home-icons"></i>
+                    <p><a href="{% url 'consumers' %}">Consumers</a>
+                    <br />Manage your currently active consumers </p>
+                </div>
+
+                <div class="large-3 medium-3 small-6 columns">
+                <i class="fi-torsos-all home-icons"></i>
+                    <p><a href="{% url 'users' %}">Users</a>
+                    <br />View all SDI OS LTI mapped users</p>
+                </div>
+
+                <div class="large-3 medium-3 small-6 columns">
+                <i class="fi-wrench home-icons"></i>
+                    <p><a href="{% url 'settings' %}">Settings</a>
+                    <br />Set up your LTI API configurations</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}
+
+

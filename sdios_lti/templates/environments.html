@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}SDIs{% endblock title %}
+
+{% block body %}
+<div class="row">
+    <div class="small-6 columns">
+
+        <table role="grid">
+        <caption>SDIs Without LTI Access</caption>
+            <thead>
+                <tr>
+                    <th width="300">SDI</th>
+                    <th width="200"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sdi in sdis  %}
+                {% if  not sdi.lti_status %}
+                <tr>
+                    <td>
+                        <span id="{{ sdi.sdi_id }}">{{ sdi.name }}</span>
+                        <br/>
+                        <small>Belongs to: {{ sdi.user.username }}</small>
+                    </td>
+                    <td>
+                        <a href="#" class="button expand js-enable-lti" data-reveal-id="enable_lti" data-sdi-id="{{ sdi.sdi_id }}">Export</a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+    <div class="small-6 columns">
+
+        <table role="grid">
+        <caption>LTI-Enabled SDIs</caption>
+            <thead>
+                <tr>
+                    <th width="300">LTI SDI Name</th>
+                    <th width="200">LTI Key</th>
+                    <th width="200"> </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sdi in sdis  %}
+                {% if  sdi.lti_status %}
+                <tr>
+                    <td>
+                        <span>{{ sdi.lti_name }}</span>
+                        <br/>
+                        <small>SDI Name: {{ sdi.name }}</small>
+                        <br/>
+                        <small>Belongs to: {{ sdi.user.username }}</small>
+                    </td>
+                    <td>{{ sdi.lti_key }}</td>
+                    <td>
+                            <a href="{% url 'remove_lti_access' sdi.sdi_id %}" class="button expand js-remove-lti alert">Remove</a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+{# Modal Form when exporting an environment #}
+<div id="enable_lti" class="reveal-modal" data-reveal>
+    <p class="lead">You are enabling LTI access for SDI: <span id="lti_req_env_name"></span></p>
+    <form action="{% url 'export_environment' %}" method="POST" > {% csrf_token %}
+        {% if form.non_field_errors %}
+        <ul>
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% for field in form.visible_fields  %}
+        <div class="row">
+            <div class="small-11 columns">
+                <div class="row">
+                    <div class="small-3 columns">
+                        <label class="right inline {% if field.errors %}error{% endif %}">{{ field.label}}</label>
+                    </div>
+                    <div class="small-9 columns">
+                        {{ field }}
+                        {% if field.errors %}<small class="error">{{ field.errors|striptags }}</small>{% endif %}
+                        <small class="left help-text inline">{{ field.help_text }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        <div class="row">
+            <div class="small-11 columns">
+                <div class="row">
+                    <div class="small-3 columns">
+                    </div>
+                    <div class="small-9 columns">
+                        <input type="submit" class=" button expand" value="Export Container">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <a class="close-reveal-modal">&#215;</a>
+</div>
+{% endblock body %}
+
+{% block javascript %}
+<script type="text/javascript">
+    $(function () {
+
+        /**
+        * Show modal for exporting/enabling an environment to LTI.
+        * Users can replace LTI keys (Currently environment UUID) and input a different
+        * environment name.
+        */
+        $(".js-enable-lti").on("click", function () {
+            var sdi_id = $(this).data("sdi-id");
+            var env_name = $("#" + sdi_id).text();
+
+             // Initialise modal title with environment name
+            $("#lti_req_env_name").text(env_name);
+
+            //  Populate modal form with environment fields
+            $("#id_sdios_environment_uuid").val(sdi_id);
+            $("#id_lti_environment_key").val(sdi_id);
+            $("#id_name").val(env_name);
+        });
+
+        // Open modal form on validation error
+        {% if error %}
+        $("#lti_req_env_name").text($("#" + $("#id_sdios_environment_uuid").val()).text());
+        $("#enable_lti").foundation("reveal", "open");
+        {% endif %}
+
+    });
+</script>
+{% endblock javascript %}
