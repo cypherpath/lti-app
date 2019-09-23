@@ -1,6 +1,8 @@
+import functools
+
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -23,16 +25,15 @@ def lti(request):
     Process an LTI request.  This must be an HTTP POST from an
     LTI-compatible LMS.
     """
-
     if request.method != "POST":
         return HttpResponseBadRequest("POST data only")
 
     try:
         sdios_lti.utils.validate_signature(request.POST, request.META, request.body, reverse("lti"))
     except sdios_lti.utils.BadRequest as err:
-        return HttpResponseBadRequest(unicode(err))
+        return HttpResponseBadRequest(f"{err}")
     except sdios_lti.utils.UnauthorizedRequest as err:
-        return HttpResponse(unicode(err), status=HTTP_UNAUTHORIZED)
+        return HttpResponse(f"{err}", status=HTTP_UNAUTHORIZED)
 
     try:
         environment_key = request.POST["custom_sdi"]
@@ -80,8 +81,8 @@ def login(request):
         return render(request, "login.html", {"error": True, "next": redirect_to})
 
     else:
-        if request.user.is_authenticated():
-            return redirect("sdios_lti.views.index")
+        if request.user.is_authenticated:
+            return redirect("index")
         redirect_to = request.GET.get("next", "")
         return render(request, "login.html", {"error": False, "next": redirect_to})
 
@@ -102,7 +103,7 @@ def logout(request):
     """
 
     auth_logout(request)
-    return redirect("sdios_lti.views.login")
+    return redirect("login")
 
 
 @login_required(login_url="/login/")
@@ -131,17 +132,20 @@ def view_environments(request, form=ExportEnvironmentForm(), validation_error=Fa
             environment["lti_status"] = False
 
     def compare(obj_a, obj_b):
+        def cmp_priv(a, b):
+            return (a > b) - (a < b)
+
         if obj_a["user"] == obj_b["user"]:
-            return cmp(obj_a["name"], obj_b["name"])
+            return cmp_priv(obj_a["name"], obj_b["name"])
 
-        return cmp(obj_a["user"], obj_b["user"])
+        return cmp_priv(obj_a["user"]["username"], obj_b["user"]["username"])
 
-    environments = sorted(environments, cmp=compare)
+    environments = sorted(environments, key=functools.cmp_to_key(compare))
 
     # Filter out environments belonging to SDI OS LTI users
     # since it makes no sense to export these.
     sdios_usernames = [usermap.sdios_username for usermap in UserMap.objects.all()]
-    environments = filter(lambda e: e["user"]["username"] not in sdios_usernames, environments)
+    environments = [environment for environment in environments if environment["user"]["username"] not in sdios_usernames]
 
     pkg = {
         "sdis": environments,
@@ -166,7 +170,7 @@ def export_environment(request):
             # Export environment form with validation errors.
             return view_environments(request, form=form, validation_error=True)
 
-        return redirect("sdios_lti.views.view_environments")
+        return redirect("sdis")
 
 
 @login_required(login_url="/login/")
@@ -180,7 +184,7 @@ def remove_lti_access(request, sdi_id):
         lti_environment.delete()
     except KeyError:
         return HttpResponseBadRequest("LTI Container does not exist")
-    return redirect("sdios_lti.views.view_environments")
+    return redirect("sdis")
 
 
 @login_required(login_url="/login/")
@@ -215,7 +219,7 @@ def add_consumer(request):
                 "form": form
             }
             return render(request, "consumers.html", pkg)
-        return redirect("sdios_lti.views.view_consumers")
+        return redirect("consumers")
 
 
 @ajax_required

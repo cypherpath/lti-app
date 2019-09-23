@@ -51,10 +51,7 @@ class Consumer(models.Model):
         return str(Consumer.get_consumer(consumer_key).secret)
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
-
-    def __unicode__(self):
-        return u"{} ({})".format(self.name, self.key)
+        return "{} ({})".format(self.name, self.key)
 
 
 class EnvironmentMap(models.Model):
@@ -77,10 +74,7 @@ class EnvironmentMap(models.Model):
     lti_environment_key = models.CharField("LTI SDI Key", max_length=255, unique=True)
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
-
-    def __unicode__(self):
-        return u"{} ({} -> {})".format(self.name, self.lti_environment_key, self.sdios_environment_uuid)
+        return "{} ({} -> {})".format(self.name, self.lti_environment_key, self.sdios_environment_uuid)
 
 
 class UserMap(models.Model):
@@ -92,7 +86,7 @@ class UserMap(models.Model):
     users.
     """
 
-    consumer = models.ForeignKey(Consumer)
+    consumer = models.ForeignKey(Consumer, on_delete=models.CASCADE)
     lti_user_id = models.CharField(max_length=255)
     sdios_username = models.CharField(max_length=255, unique=True)
     sdios_password = models.CharField(max_length=255)
@@ -101,10 +95,7 @@ class UserMap(models.Model):
         unique_together = ("consumer", "lti_user_id")
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
-
-    def __unicode__(self):
-        return u"{} -> {} ({})".format(self.consumer, self.lti_user_id, self.sdios_username)
+        return "{} -> {} ({})".format(self.consumer, self.lti_user_id, self.sdios_username)
 
     @staticmethod
     def get_sdios_user(api, usermap):
@@ -122,7 +113,7 @@ class UserMap(models.Model):
         :rtype: dict or `None`
         """
 
-        users = filter(lambda e: e["username"] == usermap.sdios_username, api.get("accounts/users"))
+        users = [e for e in api.get("accounts/users") if e["username"] == usermap.sdios_username]
         if users:
             return users[0]
 
@@ -157,8 +148,8 @@ class UserMap(models.Model):
             def __get_rand_chars(strg, leng):
                 return "".join(random.choice(strg) for x in range(leng))
 
-            sdios_username = "SDIOS-LTI-{}".format(os.urandom(8).encode("hex"))
-            rand_chars = __get_rand_chars(string.letters, 10) + __get_rand_chars(string.digits, 3) + __get_rand_chars(string.punctuation, 3)
+            sdios_username = "SDIOS-LTI-{}".format(os.urandom(8).hex())
+            rand_chars = __get_rand_chars(string.ascii_letters, 10) + __get_rand_chars(string.digits, 3) + __get_rand_chars(string.punctuation, 3)
             sdios_password = "".join(random.sample(rand_chars, len(rand_chars)))
 
             user_params = UserMap.__user_params(sdios_username, sdios_password, default_tenancy)
@@ -227,7 +218,7 @@ class UserMap(models.Model):
             raise Exception
 
         try:
-            source_user = filter(lambda e: e["sdi_id"] == source_environment.sdios_environment_uuid, environments)[0]["user"]
+            source_user = [e for e in environments if e["sdi_id"] == source_environment.sdios_environment_uuid][0]["user"]
         except IndexError:
             source_environment.delete()
             raise
@@ -237,7 +228,7 @@ class UserMap(models.Model):
         # this is the user's first visit) or if the environment is
         # running.  If the environment is running, we want to reuse that
         # anyway, so failure to delete is OK.
-        user_environment = filter(lambda e: e["name"] == source_environment.name and e["user"] == user["pk"], environments)
+        user_environment = [e for e in environments if e["name"] == source_environment.name and e["user"] == user["pk"]]
         if user_environment:
             try:
                 api.delete("sdis/{}".format(user_environment[0]["sdi_id"]))
@@ -269,11 +260,11 @@ class UserMap(models.Model):
         # This will fail if the environment does not exist, which is
         # possible if the source environment was running and this is the
         # user's first login attempt.
-        environment = filter(lambda e: e["user"] == int(user["pk"]) and e["name"] == source_environment.name, environments)[0]
+        environment = [e for e in environments if e["user"] == int(user["pk"]) and e["name"] == source_environment.name][0]
 
         # Stop all environments belonging to this user, except for the
         # just-copied environment.
-        for env in filter(lambda e: e["user"] == user["pk"] and e["name"] != source_environment.name, environments):
+        for env in [e for e in environments if e["user"] == user["pk"] and e["name"] != source_environment.name]:
             api.post("sdis/{}/stop".format(env["sdi_id"]))
 
         url = api.post("accounts/login/token", {"user": user["pk"]})["url"]
@@ -316,7 +307,4 @@ class Setting(models.Model):
         return settings
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
-
-    def __unicode__(self):
-        return u"SDI OS @ {} (ID: {}, Secret: {})".format(self.sdios_url, self.client_id, self.client_secret)
+        return "SDI OS @ {} (ID: {}, Secret: {})".format(self.sdios_url, self.client_id, self.client_secret)

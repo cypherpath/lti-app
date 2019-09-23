@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.contrib import admin
 
 import sdios_lti.views
 
-urlpatterns = patterns(
-    "",
+urlpatterns = [
     url(r"^$", sdios_lti.views.index, name="index"),
 
     url(r"^login/$", sdios_lti.views.login, name="login"),
@@ -24,5 +23,5 @@ urlpatterns = patterns(
 
     url(r"^lti/$", sdios_lti.views.lti, name="lti"),
 
-    url(r"^admin/", include(admin.site.urls)),
-)
+    url(r"^admin/", admin.site.urls, name="admin"),
+]

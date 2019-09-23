@@ -5,7 +5,7 @@ import requests
 from sdios_lti.models import Setting
 
 
-class APIRequest(object):
+class APIRequest:
     """
     This class allows API calls to be made to SDI OS.
     Credentials are pulled from the Setting table in the database, so
@@ -62,7 +62,7 @@ class APIRequest(object):
         """
         response = requests.post(self.__api(path), data=json.dumps(params), headers=self.__headers, verify=self.__verify)
         if 400 <= response.status_code < 500:
-            print response.text
+            print(response.text)
 
         response.raise_for_status()
 
@@ -105,7 +105,7 @@ class APIRequest(object):
 
         response = requests.put(self.__api(path), data=json.dumps(params), headers=self.__headers, verify=self.__verify)
         if 400 <= response.status_code < 500:
-            print response.text
+            print(response.text)
 
         response.raise_for_status()
 

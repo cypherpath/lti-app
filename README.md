@@ -8,10 +8,9 @@ This is an example application that can interface into a Learning Management Sys
 
     * Linux
     * PostgreSQL
-    * Python 2.7
-    * Virtualenv
+    * Python 3.6
 
-This application is based on Django 1.7; for information and documentation on the Django framework, see https://www.djangoproject.com/.
+This application is based on Django 2.2.5; for information and documentation on the Django framework, see https://www.djangoproject.com/.
 
 This application has only been tested on Linux, but should work on other POSIX systems, and may work on Windows as well. The only LMS that has been tested with this LTI application is Moodle.
 
@@ -39,15 +38,13 @@ CREATE USER sdios_lti WITH PASSWORD 'sdios_lti';
 GRANT ALL PRIVILEGES ON DATABASE sdios_lti TO sdios_lti;
 ```
 
-Postgres is now ready for use.
+The default password mode for Postgres is 'ident', so it may be necessary to edit /var/lib/pgsql/data/pg\_hba.conf and change 'ident' to 'md5' in order to properly authenticate with the postgres server.
 
-### Python 2 virtual environment
+### Python 3 virtual environment
 
 It is highly recommended that a Python virtual environment be used.  To create a virtual environment for this application, run the following from the top-level directory (i.e. the directory containing the manage.py file):
 
-`virtualenv --no-site-packages root`
-
-Note: Ensure that the virtualenv you run is for **Python 2**, not Python 3.  The script may be called `virtualenv2` on your system.  
+`python3 -m venv root`
 
 To activate the virtual environment inside the current shell:
 
@@ -55,7 +52,7 @@ To activate the virtual environment inside the current shell:
 
 This assumes a Bourne-compatible shell.  If you are unfamiliar with Python virtual environments, please see https://virtualenv.pypa.io/en/latest/.
 
-### Python 2 dependencies
+### Python 3 dependencies
 
 Dependencies can now be installed.  Some dependencies require external libraries to be installed.  Pycrypto requires `libgmp`, and Psycopg2 requires PostgreSQL.  Note that on many systems separate development packages must be installed, such as `postgresql-server-dev` and `libgmp-dev`.  Consult your system's documentation for more information.  To install dependencies, run:
 

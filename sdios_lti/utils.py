@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # encoding: utf-8
 
 import base64
@@ -57,11 +57,11 @@ def validate_signature(post, meta, post_body, uri_path):
 
     # Consumer secret must be concatenated with "&" and the token
     # secret, even if that is empty (OAuth 1.0 §9.2).
-    secret = urllib.quote(consumer_secret, "") + "&"
+    secret = urllib.parse.quote(consumer_secret, "") + "&"
 
     # OAuth 1.0 §9.2.2.
-    hmac = HMAC.new(secret, msg=signature_base_string, digestmod=SHA)
-    oauth_signature = base64.b64decode(urllib.unquote(post["oauth_signature"]))
+    hmac = HMAC.new(secret.encode(), msg=signature_base_string.encode(), digestmod=SHA)
+    oauth_signature = base64.b64decode(urllib.parse.unquote(post["oauth_signature"]))
 
     if oauth_signature != hmac.digest():
         raise UnauthorizedRequest("Signature validation failed")
@@ -112,14 +112,14 @@ def __normalize_request_parameters(post_body, query):
     """
 
     # Spaces can be encoded as + in HTTP POSTs, so normalize them.
-    post_body = post_body.replace("+", "%20")
+    post_body = post_body.replace(b"+", b"%20")
 
-    parts = post_body.split("&")
+    parts = post_body.split(b"&")
     if query:
-        parts += query.split("&")
+        parts += query.split(b"&")
 
     # OAuth 1.0 §9.1.1.
-    return "&".join(entry for entry in sorted(parts) if entry.split("=")[0] != "oauth_signature")
+    return b"&".join(entry for entry in sorted(parts) if entry.split(b"=")[0] != b"oauth_signature")
 
 
 def __create_signature_base_string(normalized_request_parameters, meta, path):
@@ -142,10 +142,10 @@ def __create_signature_base_string(normalized_request_parameters, meta, path):
     protocol = "https" if int(meta["SERVER_PORT"]) == 443 else "http"
 
     parts = [
-        "POST",
-        "{}://{}{}".format(protocol, meta["HTTP_HOST"], path),
+        b"POST",
+        "{}://{}{}".format(protocol, meta["HTTP_HOST"], path).encode(),
         normalized_request_parameters
     ]
 
     # OAuth 1.0 §9.1.3.
-    return "&".join(urllib.quote(part, "") for part in parts)
+    return '&'.join(urllib.parse.quote_from_bytes(part, b"") for part in parts)
